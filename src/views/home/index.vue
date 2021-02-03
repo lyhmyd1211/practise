@@ -1,18 +1,23 @@
 <template>
   <div>
     <div class="table1">
-      <div v-for="(item,index) in todos" :key="index" class="table-main">
+      <div v-for="(item, index) in todos" :key="index" class="table-main">
         <!-- :class="{'table-scale':islarge===index}" -->
         <el-table
           border
           :data="item.tableData"
-          style="flex:1;  flex-wrap: wrap;"
+          style="flex: 1; flex-wrap: wrap"
           size="mini"
           :fit="false"
-          @row-dblclick="scale($event,item)"
+          @row-dblclick="scale($event, item)"
         >
           <el-table-column :label="item.title" align="center">
-            <el-table-column prop="time" label="时间" width="63%" align="center"></el-table-column>
+            <el-table-column
+              prop="time"
+              label="时间"
+              width="63%"
+              align="center"
+            ></el-table-column>
             <el-table-column
               :prop="time"
               :label="time"
@@ -23,14 +28,24 @@
             >
               <template slot-scope="scope">
                 <span
-                  v-if="parseFloat(scope.row[time])-parseFloat(scope.row[time+'a'])>2"
+                  v-if="
+                    parseFloat(scope.row[time]) -
+                      parseFloat(scope.row[time + 'a']) >
+                    2
+                  "
                   class="high"
-                >{{scope.row[time]}}</span>
+                  >{{ scope.row[time] }}</span
+                >
                 <span
-                  v-else-if="parseFloat(scope.row[time])-parseFloat(scope.row[time+'a'])<-2"
+                  v-else-if="
+                    parseFloat(scope.row[time]) -
+                      parseFloat(scope.row[time + 'a']) <
+                    -2
+                  "
                   class="low"
-                >{{scope.row[time]}}</span>
-                <span v-else>{{scope.row[time]}}</span>
+                  >{{ scope.row[time] }}</span
+                >
+                <span v-else>{{ scope.row[time] }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="area" width="63%" align="center">
@@ -52,14 +67,18 @@
       </div>
     </div>
     <el-dialog
-      :title="islarge.title"
+      :title="largeData.title"
       :visible.sync="islarge"
       width="100%"
       fullscreen
       :before-close="handleClose"
     >
-      <el-table border :data="islarge.tableData">
-        <el-table-column prop="time" label="时间" align="center"></el-table-column>
+      <el-table border :data="largeData.tableData">
+        <el-table-column
+          prop="time"
+          label="时间"
+          align="center"
+        ></el-table-column>
         <el-table-column
           :prop="time"
           :label="time"
@@ -69,14 +88,24 @@
         >
           <template slot-scope="scope">
             <span
-              v-if="parseFloat(scope.row[time])-parseFloat(scope.row[time+'a'])>2"
+              v-if="
+                parseFloat(scope.row[time]) -
+                  parseFloat(scope.row[time + 'a']) >
+                2
+              "
               class="high"
-            >{{scope.row[time]}}</span>
+              >{{ scope.row[time] }}</span
+            >
             <span
-              v-else-if="parseFloat(scope.row[time])-parseFloat(scope.row[time+'a'])<-2"
+              v-else-if="
+                parseFloat(scope.row[time]) -
+                  parseFloat(scope.row[time + 'a']) <
+                -2
+              "
               class="low"
-            >{{scope.row[time]}}</span>
-            <span v-else>{{scope.row[time]}}</span>
+              >{{ scope.row[time] }}</span
+            >
+            <span v-else>{{ scope.row[time] }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="area" align="center">
@@ -287,16 +316,21 @@ export default {
         }
       ],
 
-      islarge: false
+      islarge: false,
+      largeData: {}
     };
   },
   methods: {
-    scale: function(e, item) {
-      this.islarge = item;
+    scale: function (e, item) {
+      this.largeData = item;
+      this.islarge = true
+    },
+    handleClose() {
+      this.islarge = false
     }
   },
   created() {
-    this.todos.map((item, index) => {});
+    this.todos.map((item, index) => { });
   }
 };
 </script>

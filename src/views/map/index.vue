@@ -8,10 +8,25 @@
         v-for="(item, index) in timeBtn"
         :key="index"
         @click="timeClick(item)"
-        :class="{'btn-active':curBtn==item}"
-      >{{item}}</el-button>
+        :class="{ 'btn-active': curBtn == item }"
+        >{{ item }}</el-button
+      >
     </div>
-    <el-slider v-model="slider" :step="10" show-stops></el-slider>
+    <el-slider
+      v-model="slider"
+      :step="10"
+      show-stops
+      class="slider"
+      :marks="marks"
+    ></el-slider>
+    <el-switch
+      v-model="switchData"
+      active-text="08时"
+      inactive-text="20时"
+      class="switch"
+      inactive-color="#13ce66"
+    >
+    </el-switch>
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="最高气温" name="1"></el-tab-pane>
       <el-tab-pane label="最低气温" name="2"></el-tab-pane>
@@ -67,11 +82,12 @@ export default {
   data() {
     return {
       slider: 0,
-      //  marks: {
-      //     0: '0°C',
-      //     8: '8°C',
-      //     37: '37°C',
-      //     50: },
+      switchData: '',
+      marks: {
+        0: '5日20时',
+        10: '5日08时',
+        20: '4日20时',
+      },
       curBtn: "5日20时",
       timeBtn: ["5日20时", "5日08时", "4日20时", "4日08时", "3日20时"],
       hideTip: false,
@@ -199,18 +215,16 @@ export default {
                               ${element.R}
                               </td>
                               <td>
-                              ${
-                                element.highT && element.highT != 0
-                                  ? element.highT
-                                  : "-"
-                              }
+                              ${element.highT && element.highT != 0
+                    ? element.highT
+                    : "-"
+                  }
                               </td>
                               <td>
-                               ${
-                                 element.downT && element.downT != 0
-                                   ? element.downT
-                                   : "-"
-                               }
+                               ${element.downT && element.downT != 0
+                    ? element.downT
+                    : "-"
+                  }
                               </td>
                             </tr>`;
               }
@@ -403,7 +417,7 @@ export default {
     timeClick(btn) {
       this.curBtn = btn;
     },
-    handleClick() {},
+    handleClick() { },
     mapClick(region) {
       this.$emit("mapClick", region);
       this.loading = true;
@@ -442,8 +456,7 @@ export default {
       // this.loading = false;
 
       Axios.get(
-        `/admin/area/${this.areaType[getAreaCodeType(region.code) - 1]}/${
-          region.code
+        `/admin/area/${this.areaType[getAreaCodeType(region.code) - 1]}/${region.code
         }.json`
       )
         .then(res => {
@@ -636,7 +649,7 @@ export default {
 .box-inside {
   position: absolute;
   margin: 2% 0;
-  background: url("../../assets/map/cndt_box_4.png") no-repeat;
+  background: url('../../assets/map/cndt_box_4.png') no-repeat;
   background-size: contain;
   width: 35.5%;
   height: 29%;
@@ -658,6 +671,13 @@ export default {
   .btn-active {
     background-color: rgba(64, 158, 255, 0.6);
   }
+}
+.slider {
+  position: absolute;
+  top: 40px;
+  width: 600px;
+  left: 600px;
+  z-index: 1;
 }
 </style>
 <style lang="scss">
@@ -752,6 +772,33 @@ export default {
   }
   .el-tabs__nav-wrap::after {
     display: none;
+  }
+}
+.slider {
+  .el-slider__stop {
+    background-color: #409eff;
+  }
+  .el-slider__marks-text {
+    color: #fff;
+  }
+}
+.switch {
+  position: absolute;
+  top: 90px;
+  right: 50px;
+  z-index: 1;
+  .el-switch__label {
+    color: #fff;
+    span {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  }
+  .el-switch__label--left.is-active {
+    color: #13ce66;
+  }
+  .el-switch__label--right.is-active {
+    color: #409eff;
   }
 }
 </style>
