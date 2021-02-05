@@ -3,30 +3,29 @@
     <!-- <div class="center-disc box-inside">
       <radar :selected="selected"></radar>
     </div>-->
-    <div class="time-box">
-      <el-button
-        v-for="(item, index) in timeBtn"
-        :key="index"
-        @click="timeClick(item)"
-        :class="{ 'btn-active': curBtn == item }"
-        >{{ item }}</el-button
-      >
+    <div class="top" @mouseenter="sliderEnter" @mouseleave="sliderLeave">
+      <div class="time-box">
+        <el-button
+          v-for="(item, index) in timeBtn"
+          :key="index"
+          @click="timeClick(item.time)"
+          :class="{ 'btn-active': curBtn == item.time }"
+          >{{ item.name }}</el-button
+        >
+      </div>
+      <el-slider
+        v-model="slider"
+        :step="step"
+        :class="['slider', { isChoose }]"
+        :marks="marks"
+        :show-tooltip="false"
+        @change="sliderChange"
+      ></el-slider>
+      <div :class="['curTime', { isChoose }]" @click="chooseClick">
+        {{ curTime.name }}
+      </div>
     </div>
-    <el-slider
-      v-model="slider"
-      :step="10"
-      show-stops
-      class="slider"
-      :marks="marks"
-    ></el-slider>
-    <el-switch
-      v-model="switchData"
-      active-text="08时"
-      inactive-text="20时"
-      class="switch"
-      inactive-color="#13ce66"
-    >
-    </el-switch>
+
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="最高气温" name="1"></el-tab-pane>
       <el-tab-pane label="最低气温" name="2"></el-tab-pane>
@@ -70,6 +69,9 @@ import Axios from "axios";
 import { getAreaCodeType } from "@/utils/tools";
 import { mapGetters } from "vuex";
 import { CodeToText } from "element-china-area-data";
+import { toFix } from '@/utils/tools'
+import { getDate, getMapByDate } from '@/api/map'
+
 export default {
   // props: {
   //   mapData: {
@@ -81,15 +83,17 @@ export default {
   // },
   data() {
     return {
+      timer: '',
       slider: 0,
+      curTime: {},
       switchData: '',
+      isChoose: false,
       marks: {
-        0: '5日20时',
-        10: '5日08时',
-        20: '4日20时',
+
       },
-      curBtn: "5日20时",
-      timeBtn: ["5日20时", "5日08时", "4日20时", "4日08时", "3日20时"],
+      step: 100 / 13,
+      curBtn: "",
+      timeBtn: {},
       hideTip: false,
       activeName: "1",
       mapData: [
@@ -411,11 +415,79 @@ export default {
     // const maps = await geojsonMerge.merge([this.china1, this.gzMap])
     // await echarts.registerMap('china', maps)
     // await this.setAreaData(this.areaData, 1, { name: '贵州省', code: '520000' })
+    this.fetchData()
   },
   // created() {},
   methods: {
+    sliderEnter() {
+      clearTimeout(this.timer)
+    },
+    sliderLeave() {
+      this.timer = setTimeout(() => {
+        this.isChoose = false
+      }, 5000);
+    },
+    chooseClick() {
+      this.isChoose = true
+    },
+    resetCurTime() {
+      this.marks[0] = {
+        style: {
+          color: '#55E5FF'
+        },
+        label: this.marks[0]
+      }
+      this.curTime = {
+        name: this.marks[0].label,
+        pos: Object.keys(this.marks).findIndex(i => i == 0)
+      }
+      this.slider = 0
+    },
+    resetSlider() {
+      for (let index = 2; index < 15; index += 2) {
+        this.marks[toFix(this.step * (index - 2), 2)] = this.$moment(this.curBtn + 1000 * 24 * 60 * 60 * (index / 2)).format('DD日') + '08时'
+        this.marks[toFix(this.step * (index - 1), 2)] = this.$moment(this.curBtn + 1000 * 24 * 60 * 60 * (index / 2)).format('DD日') + '20时'
+      }
+      this.marks = { ...this.marks }
+    },
+    sliderChange() {
+      this.resetSlider()
+      this.marks[toFix(this.slider, 2)] = {
+        style: {
+          color: '#55E5FF'
+        },
+        label: this.marks[toFix(this.slider, 2)]
+      }
+      this.curTime = {
+        name: this.marks[toFix(this.slider, 2)].label,
+        pos: Object.keys(this.marks).findIndex(i => i == toFix(this.slider, 2))
+      }
+      this.fetchMap(this.curBtn, this.curTime.pos)
+      this.isChoose = false
+    },
+    fetchMap(date1, date2) {
+      getMapByDate({ date1, date2 })
+    },
+    fetchData() {
+      getDate({ count: 5 }).then(res => {
+        this.timeBtn = res.map((item, index) => {
+          return {
+            name: this.$moment(item.dtime_ec).format('DD日HH时'),
+            time: item.dtime_ec
+          }
+        })
+        this.curBtn = res[0].dtime_ec
+        this.resetSlider()
+        this.resetCurTime()
+        this.fetchMap(res[0].dtime_ec, 1)
+
+      })
+    },
     timeClick(btn) {
       this.curBtn = btn;
+      this.fetchMap(this.curBtn, 1)
+      this.resetSlider()
+      this.resetCurTime()
     },
     handleClick() { },
     mapClick(region) {
@@ -470,7 +542,6 @@ export default {
           } else {
             this.areaRoute.push(region);
           }
-          debugger;
           const areas = this.getArea(
             this.areaData,
             getAreaCodeType(region.code) - 1,
@@ -527,7 +598,6 @@ export default {
       this.option.geo[0].scaleLimit = data[level].scaleLimit;
     },
     setLocation(code) {
-      debugger;
       const tmp = Object.keys(this.locationData[0]).filter(i => i == code);
       if (tmp && tmp.length > 0) {
         this.option.geo[0].center = this.locationData[0][tmp[0]].center.map(
@@ -645,6 +715,7 @@ export default {
 .map-chart {
   height: 100%;
   width: 100%;
+  position: relative;
 }
 .box-inside {
   position: absolute;
@@ -656,11 +727,21 @@ export default {
   min-width: 227px;
   min-height: 198px;
 }
-.time-box {
+.top {
   position: absolute;
   top: 50px;
   z-index: 1;
   left: 20px;
+  display: flex;
+  justify-content: space-between;
+  width: calc(100% - 40px);
+}
+.time-box {
+  // position: absolute;
+  // top: 50px;
+  // z-index: 1;
+  // left: 20px;
+  width: 600px;
   .el-button {
     color: #fff;
     height: 30px;
@@ -673,11 +754,33 @@ export default {
   }
 }
 .slider {
-  position: absolute;
-  top: 40px;
-  width: 600px;
-  left: 600px;
-  z-index: 1;
+  margin-top: -12px;
+  width: 0;
+  opacity: 0;
+  transition: all 0.8s ease-in-out;
+  pointer-events: none;
+  &.isChoose {
+    width: calc(100% - 700px);
+    opacity: 1;
+    transition: all 0.8s ease-in-out;
+    pointer-events: auto;
+  }
+}
+.curTime {
+  color: rgb(85, 229, 255);
+  font-size: 18px;
+  cursor: pointer;
+  font-weight: bold;
+  width: auto;
+  transition: all 0.8s ease-in-out;
+  opacity: 1;
+  visibility: 1;
+  &.isChoose {
+    // width: 0;
+    visibility: 0;
+    opacity: 0;
+    transition: all 0.8s ease-in-out;
+  }
 }
 </style>
 <style lang="scss">
@@ -733,7 +836,7 @@ export default {
   }
   .bread {
     position: absolute;
-    top: 50px;
+    top: 65px;
     right: 5%;
     .el-breadcrumb__item {
       .el-breadcrumb__inner {
@@ -776,29 +879,20 @@ export default {
 }
 .slider {
   .el-slider__stop {
-    background-color: #409eff;
+    background-color: #645aa5;
   }
   .el-slider__marks-text {
     color: #fff;
+    min-width: 80px;
+    text-align: center;
+    font-weight: bold;
+    // font-size: 12px;
   }
-}
-.switch {
-  position: absolute;
-  top: 90px;
-  right: 50px;
-  z-index: 1;
-  .el-switch__label {
-    color: #fff;
-    span {
-      font-size: 16px;
-      font-weight: bold;
-    }
+  .el-slider__bar {
+    opacity: 0;
   }
-  .el-switch__label--left.is-active {
-    color: #13ce66;
-  }
-  .el-switch__label--right.is-active {
-    color: #409eff;
+  .el-slider__runway {
+    background-color: rgba(255, 255, 255, 0.1);
   }
 }
 </style>

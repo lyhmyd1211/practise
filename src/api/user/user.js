@@ -3,7 +3,7 @@ import qs from 'qs'
 // 登录
 export function login(params) {
   return request({
-    url: '/vue-admin-template/user/login',
+    url: '/login',
     method: 'post',
     data: qs.stringify(params)
   })
@@ -11,7 +11,7 @@ export function login(params) {
 // 获取用户信息
 export function getInfo(token) {
   return request({
-    url: '/vue-admin-template/user/session',
+    url: '/session',
     method: 'get'
   })
 }

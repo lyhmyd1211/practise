@@ -38,11 +38,17 @@ module.exports = {
     },
     proxy: {
       "/admin": {
+        ws: false,
         target: "http://region-test.gz-icloud.com.cn/", //目标接口域名
         changeOrigin: true //是否跨域
-      }
+      },
+      "/": {
+        ws: false,
+        target: "http://127.0.0.1:7001/",
+        changeOrigin:true
+      },
     },
-    before: require("./mock/mock-server.js")
+    // before: require("./mock/mock-server.js")
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that

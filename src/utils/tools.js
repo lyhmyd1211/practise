@@ -677,3 +677,8 @@ export function getAreaCodeType(code, def) {
     return 3;
   }
 }
+export function toFix(num,d){
+  num *=Math.pow(10,d);
+  num = Math.round(num);
+  return num/(Math.pow(10,d));
+}

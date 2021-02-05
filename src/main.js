@@ -11,7 +11,7 @@ import "@/styles/index.scss"; // global css
 import App from "./App";
 import store from "./store";
 import router from "./router";
-
+import moment from 'moment'
 import "@/icons"; // icon
 import "@/permission"; // permission control
 import * as filters from "./filters"; // global filters
@@ -41,6 +41,10 @@ Vue.use(ElementUI);
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key]);
 });
+
+Object.defineProperty(Vue.prototype, '$moment', {
+  value: moment
+})
 
 // 自定义全局指令
 Object.keys(directive).forEach(key => {
