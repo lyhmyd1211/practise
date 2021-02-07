@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar" :class="{opened:sidebar.opened}">
+  <div class="navbar" :class="{ opened: sidebar.opened }">
     <hamburger
       :is-active="sidebar.opened"
       class="hamburger-container"
@@ -36,7 +36,11 @@
         class="app-form"
       >
         <el-form-item label="登录账号" prop="account">
-          <el-input v-model="form.account" disabled placeholder="请输入登录账号" />
+          <el-input
+            v-model="form.account"
+            disabled
+            placeholder="请输入登录账号"
+          />
         </el-form-item>
         <el-form-item label="姓名" prop="name">
           <el-input v-model="form.name" placeholder="请输入姓名" />
@@ -48,10 +52,18 @@
           <el-input v-model="form.email" placeholder="请输入电子邮箱" />
         </el-form-item>
         <el-form-item label="原密码" prop="password">
-          <el-input v-model="form.password" type="password" placeholder="请输入原密码" />
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="请输入原密码"
+          />
         </el-form-item>
         <el-form-item label="新密码" prop="newPassword">
-          <el-input v-model="form.newPassword" type="password" placeholder="请输入新密码，如不需要修改密码不用输入此项" />
+          <el-input
+            v-model="form.newPassword"
+            type="password"
+            placeholder="请输入新密码，如不需要修改密码不用输入此项"
+          />
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -173,7 +185,7 @@ export default {
       this.$store.dispatch('app/toggleSideBar')
     },
     async logout() {
-      await this.$store.dispatch('user/logout')
+      // await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }

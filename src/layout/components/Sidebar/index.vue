@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'has-logo':showLogo}">
+  <div :class="{ 'has-logo': showLogo }">
     <logo v-if="showLogo" :collapse="isCollapse" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
@@ -34,7 +34,6 @@ export default {
   computed: {
     ...mapGetters(['sidebar']),
     routes() {
-      console.log('asdwq', this.$store.state.permission.routes)
       return this.$store.state.permission.routes
     },
     activeMenu() {

@@ -3,7 +3,7 @@
     <!-- <div class="center-disc box-inside">
       <radar :selected="selected"></radar>
     </div>-->
-    <div class="top" @mouseenter="sliderEnter" @mouseleave="sliderLeave">
+    <div class="top">
       <div class="time-box">
         <el-button
           v-for="(item, index) in timeBtn"
@@ -21,11 +21,8 @@
         :show-tooltip="false"
         @change="sliderChange"
       ></el-slider>
-      <div :class="['curTime', { isChoose }]" @click="chooseClick">
-        {{ curTime.name }}
-      </div>
     </div>
-
+    <grade class="grade"></grade>
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="最高气温" name="1"></el-tab-pane>
       <el-tab-pane label="最低气温" name="2"></el-tab-pane>
@@ -71,8 +68,10 @@ import { mapGetters } from "vuex";
 import { CodeToText } from "element-china-area-data";
 import { toFix } from '@/utils/tools'
 import { getDate, getMapByDate } from '@/api/map'
+import Grade from './grade.vue';
 
 export default {
+  components: { Grade },
   // props: {
   //   mapData: {
   //     type: Array,
@@ -81,13 +80,14 @@ export default {
   //     }
   //   }
   // },
+
   data() {
     return {
       timer: '',
       slider: 0,
       curTime: {},
       switchData: '',
-      isChoose: false,
+      isChoose: true,
       marks: {
 
       },
@@ -102,14 +102,7 @@ export default {
           value: [
             "106.450000",
             "26.033333",
-            {
-              industrialOutputValue: 123456,
-              productList: [
-                { R: 1, highT: 2, downT: 3 },
-                { R: 4, highT: 5, downT: 6 }
-              ],
-              address: "sfg564"
-            }
+
           ]
         },
         { name: "57913", value: ["106.983333", "26.450000"] },
@@ -194,7 +187,7 @@ export default {
       },
       option: {
         tooltip: {
-          alwaysShowContent: true,
+          // alwaysShowContent: true,
           triggerOn: "none",
           backgroundColor: "rgba(81,72,136,0.5)",
           borderColor: "#a9a2d2",
@@ -215,26 +208,28 @@ export default {
               ) {
                 const element = param.data.value[2].productList[index];
                 td += `<tr >
-                              <td>
-                              ${element.R}
-                              </td>
-                              <td>
+                 <td>
                               ${element.highT && element.highT != 0
                     ? element.highT
                     : "-"
                   }
                               </td>
-                              <td>
+                                <td>
                                ${element.downT && element.downT != 0
                     ? element.downT
                     : "-"
                   }
                               </td>
+                              <td>
+                              ${element.R}
+                              </td>
+                             
+                            
                             </tr>`;
               }
               return (
                 `<div class="tool-box">
-                      <div class="tool-box-title">${param.name}</div>
+                      <div class="tool-box-title">${param.data.num}</div>
                       <div class="tool-box-content">
                          <table >
                           <thead>
@@ -253,7 +248,7 @@ export default {
                 `</tbody>
                         </table>
                         <div class="tool-box-text">预报方法：${param.data.value[2].industrialOutputValue}</div>
-                        <div class="tool-box-text">起报时间：${param.data.value[2].address}</div>
+                        <div class="tool-box-text">起报时间：${param.data.value[2].time}</div>
                         <div class="btn">
                         <a class="btn-content" href="/credit/detail?s=${param.name}">查看详情>></a>
                         </div>
@@ -416,6 +411,17 @@ export default {
     // await echarts.registerMap('china', maps)
     // await this.setAreaData(this.areaData, 1, { name: '贵州省', code: '520000' })
     this.fetchData()
+
+    this.mapData.map(item => {
+      item.num = '-'
+      item.value = [...item.value, {
+        industrialOutputValue: '-',
+        productList: [
+          { R: "-", highT: "-", downT: "-" },
+        ],
+        time: "-"
+      }]
+    })
   },
   // created() {},
   methods: {
@@ -439,7 +445,7 @@ export default {
       }
       this.curTime = {
         name: this.marks[0].label,
-        pos: Object.keys(this.marks).findIndex(i => i == 0)
+        pos: Object.keys(this.marks).findIndex(i => i == 0) + 1
       }
       this.slider = 0
     },
@@ -463,10 +469,49 @@ export default {
         pos: Object.keys(this.marks).findIndex(i => i == toFix(this.slider, 2))
       }
       this.fetchMap(this.curBtn, this.curTime.pos)
-      this.isChoose = false
+      // this.isChoose = false
     },
     fetchMap(date1, date2) {
-      getMapByDate({ date1, date2 })
+      getMapByDate({ date1, date2 }).then(res => {
+        this.mapData = this.mapData.map(el => {
+          if (res.data.data.length > 0) {
+            res.data.data.map(item => {
+              if (item.stationid === el.name) {
+                el.num = this.activeName === '1' ? item.hT : this.activeName === '2' ? item.dT : '-'
+                el.value[2] = {
+                  industrialOutputValue: '-',
+                  productList: [
+                    { R: "-", highT: item.hT, downT: item.dT },
+                  ],
+                  time: this.$moment(date1).format('DD日HH时')
+                }
+              }
+            })
+          } else {
+            el.num = '-'
+            el.value[2] = {
+              industrialOutputValue: '-',
+              productList: [
+                { R: "-", highT: "-", downT: "-" },
+              ],
+              time: "-"
+            }
+          }
+
+          return el
+        })
+        console.log('ins', this.instance, this.selected);
+        this.instance.dispatchAction({
+          type: "highlight",
+          seriesName: "scatterPointer",
+          name: this.selected.name
+        });
+        this.instance.dispatchAction({
+          type: "showTip",
+          seriesIndex: 0,
+          name: this.selected.name
+        });
+      })
     },
     fetchData() {
       getDate({ count: 5 }).then(res => {
@@ -489,43 +534,13 @@ export default {
       this.resetSlider()
       this.resetCurTime()
     },
-    handleClick() { },
+    handleClick() {
+      this.fetchMap(this.curBtn, this.curTime.pos)
+    },
     mapClick(region) {
       this.$emit("mapClick", region);
       this.loading = true;
 
-      // const tmp = this.areaRoute.filter(i => i.code == region.code);
-      // // let type = region.type
-      // if (tmp && tmp.length > 0) {
-      //   this.areaRoute = this.areaRoute.slice(
-      //     0,
-      //     this.areaRoute.findIndex(i => i.code == region.code) + 1
-      //   );
-      // } else {
-      //   this.areaRoute.push(region);
-      // }
-      // const areas = this.getArea(
-      //   this.areaData,
-      //   getAreaCodeType(region.code) - 1,
-      //   region.code
-      // );
-      // if (
-      //   areas.length > 0 &&
-      //   areas[0].children &&
-      //   getAreaCodeType(region.code) !== 1
-      // ) {
-      //   this.setAreaData(areas[0].children, {
-      //     name: region.name,
-      //     code: region.code
-      //   });
-      // } else {
-      //   this.setAreaData(areas, { name: region.name, code: region.code });
-      // }
-      // const maps = geojsonMerge.merge([this.china1, this.gzMap, gzMap]);
-      // echarts.registerMap("china", maps);
-      // this.setZoom(getAreaCodeType(region.code) - 1);
-      // // this.setLocation(region.code);
-      // this.loading = false;
 
       Axios.get(
         `/admin/area/${this.areaType[getAreaCodeType(region.code) - 1]}/${region.code
@@ -643,13 +658,12 @@ export default {
       this.instance = instance;
 
       instance.on("georoam", param => {
-        debugger;
         if (this.selected.name) {
-          this.instance.dispatchAction({
-            type: "highlight",
-            seriesName: "scatterPointer",
-            name: this.selected.name
-          });
+          // this.instance.dispatchAction({
+          //   type: "highlight",
+          //   seriesName: "scatterPointer",
+          //   name: this.selected.name
+          // });
           instance.dispatchAction({
             type: "showTip",
             seriesIndex: 0,
@@ -673,24 +687,39 @@ export default {
       });
 
       instance.on("click", params => {
-        console.log("paramsssssssssssssssss", params);
         if (params.seriesName == "scatterPointer") {
-          instance.dispatchAction({
-            type: "downplay",
-            seriesName: "scatterPointer",
-            name: this.selected.name
-          });
-          this.selected = params.data;
-          instance.dispatchAction({
-            type: "highlight",
-            seriesName: "scatterPointer",
-            name: params.name
-          });
-          instance.dispatchAction({
-            type: "showTip",
-            seriesIndex: 0,
-            name: params.name
-          });
+          if (this.selected.name === params.name) {
+            instance.dispatchAction({
+              type: "hideTip",
+            });
+            instance.dispatchAction({
+              type: "downplay",
+              seriesName: "scatterPointer",
+              name: this.selected.name
+            });
+            this.selected = {
+              name: '',
+              data: []
+            }
+          } else {
+            instance.dispatchAction({
+              type: "downplay",
+              seriesName: "scatterPointer",
+              name: this.selected.name
+            });
+            this.selected = params.data;
+            instance.dispatchAction({
+              type: "highlight",
+              seriesName: "scatterPointer",
+              name: params.name
+            });
+            instance.dispatchAction({
+              type: "showTip",
+              seriesIndex: 0,
+              name: params.name
+            });
+          }
+
         } else if (params.region.clickable) {
           // if (params.region.code.split("00").length > 1) {
           this.mapClick(params.region);
@@ -711,6 +740,7 @@ export default {
 .map-content {
   background-color: rgba(25, 21, 39, 1);
   height: 100%;
+  position: relative;
 }
 .map-chart {
   height: 100%;
@@ -734,7 +764,7 @@ export default {
   left: 20px;
   display: flex;
   justify-content: space-between;
-  width: calc(100% - 40px);
+  width: calc(100% - 70px);
 }
 .time-box {
   // position: absolute;
@@ -781,6 +811,16 @@ export default {
     opacity: 0;
     transition: all 0.8s ease-in-out;
   }
+}
+.grade {
+  background: url('../../assets/map/cndtzs_box_1.png') no-repeat;
+  width: 24.682609%;
+  height: 50%;
+  padding: 20px;
+  background-size: 100% 100%;
+  position: absolute;
+  top: 15%;
+  z-index: 1;
 }
 </style>
 <style lang="scss">
