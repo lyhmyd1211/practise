@@ -6,6 +6,7 @@
         id="distributeCharts"
         :chart-style="chartStyle"
         :option="option"
+        @getChartInstance="getInstance"
       />
     </div>
   </div>
@@ -85,6 +86,15 @@ export default {
         },
         series: [
           {
+            selectedMode: 'single',
+            select: {
+              label: {
+                show: true
+              },
+              itemStyle: {
+                color: '#645aa5'
+              }
+            },
             data: [88, 95, 75, 64, 53],
             type: 'bar',
             barWidth: '13',
@@ -141,7 +151,8 @@ export default {
             }
           }
         ]
-      }
+      },
+      instance: '',
     }
   },
   watch: {
@@ -150,6 +161,13 @@ export default {
     // this.setData(this.distributeData)
   },
   methods: {
+    getInstance(instance) {
+      this.instance = instance
+      console.log('in', instance);
+      instance.on('selectchanged', (params) => {
+        console.log('变化', params);
+      })
+    }
   }
 }
 </script>

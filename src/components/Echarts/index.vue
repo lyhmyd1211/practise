@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import echarts from "echarts";
+import * as echarts from 'echarts';
 export default {
   props: {
     id: {
@@ -12,7 +12,7 @@ export default {
     },
     chartStyle: {
       type: Object,
-      default: function() {
+      default: function () {
         return {
           width: "300px",
           height: "300px"
@@ -21,13 +21,13 @@ export default {
     },
     option: {
       type: Object,
-      default: function() {
+      default: function () {
         return {};
       }
     },
     notMerge: {
       type: Boolean,
-      default: function() {
+      default: function () {
         return false;
       }
     }

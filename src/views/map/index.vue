@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import echarts from "echarts";
+import * as echarts from 'echarts';
 var geojsonMerge = require("@mapbox/geojson-merge");
 // import gzMap from '../../../../assets/json/520000.json'
 // import china1 from '../../../../assets/json/china1.json'
@@ -375,6 +375,9 @@ export default {
       });
     }
   },
+  beforeCreate() {
+    echarts.registerMap('china', china1)
+  },
   async created() {
     this.loading = true;
     // await Axios.get(`/admin/area/china.json`).then(res => {
@@ -500,17 +503,10 @@ export default {
 
           return el
         })
-        console.log('ins', this.instance, this.selected);
-        this.instance.dispatchAction({
-          type: "highlight",
-          seriesName: "scatterPointer",
-          name: this.selected.name
-        });
-        this.instance.dispatchAction({
-          type: "showTip",
-          seriesIndex: 0,
-          name: this.selected.name
-        });
+        this.selected = {
+          data: [],
+          name: ""
+        }
       })
     },
     fetchData() {
@@ -575,6 +571,7 @@ export default {
             this.setAreaData(areas, { name: region.name, code: region.code });
           }
           const maps = geojsonMerge.merge([this.china1, this.gzMap, res.data]);
+          console.log('aaaaaaaaaa', maps);
           echarts.registerMap("china", maps);
           this.setZoom(getAreaCodeType(region.code) - 1);
           this.setLocation(region.code);
@@ -829,6 +826,7 @@ export default {
     // min-width: 300px;
     // padding: 15px;
     // margin:20px
+    color: #fff;
     .tool-box-title {
       text-align: center;
       font-size: 16px;
