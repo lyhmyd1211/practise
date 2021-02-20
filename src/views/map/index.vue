@@ -22,7 +22,7 @@
         @change="sliderChange"
       ></el-slider>
     </div>
-    <grade class="grade"></grade>
+    <grade class="grade" @selectedGrade="getGrade"></grade>
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="最高气温" name="1"></el-tab-pane>
       <el-tab-pane label="最低气温" name="2"></el-tab-pane>
@@ -91,6 +91,7 @@ export default {
       marks: {
 
       },
+      gradeName: ['滑动平均', '最佳系数', '双权重', '多项式拟合', 'EC'],
       step: 100 / 13,
       curBtn: "",
       timeBtn: {},
@@ -134,6 +135,7 @@ export default {
         data: [],
         name: ""
       },
+      gradeSelect: 0,
       chartStyle: {
         width: "100%",
         height: "100%"
@@ -312,9 +314,12 @@ export default {
             },
             hoverAnimation: true,
             label: {
-              formatter: "{b}",
+              formatter: (param) => {
+                return param.data.num + '\n' + param.data.name
+              },
               position: "right",
-              show: false,
+              show: true,
+              align: 'left',
               color: "rgba(223,66,79,1)"
             },
             itemStyle: {
@@ -322,9 +327,12 @@ export default {
             },
             emphasis: {
               label: {
-                formatter: "{b}",
+                formatter: (param) => {
+                  return param.data.num + '\n' + param.data.name
+                },
                 position: "right",
                 show: true,
+                align: 'left',
                 color: "rgba(223,66,79,1)"
               },
               itemStyle: {
@@ -425,9 +433,14 @@ export default {
         time: "-"
       }]
     })
+
   },
   // created() {},
   methods: {
+    getGrade(index) {
+      this.gradeSelect = index
+      this.fetchMap(this.curBtn, this.curTime.pos, this.gradeSelect)
+    },
     sliderEnter() {
       clearTimeout(this.timer)
     },
@@ -471,18 +484,18 @@ export default {
         name: this.marks[toFix(this.slider, 2)].label,
         pos: Object.keys(this.marks).findIndex(i => i == toFix(this.slider, 2))
       }
-      this.fetchMap(this.curBtn, this.curTime.pos)
+      this.fetchMap(this.curBtn, this.curTime.pos, this.gradeSelect)
       // this.isChoose = false
     },
-    fetchMap(date1, date2) {
-      getMapByDate({ date1, date2 }).then(res => {
+    fetchMap(date1, date2, way) {
+      getMapByDate({ date1, date2, way }).then(res => {
         this.mapData = this.mapData.map(el => {
           if (res.data.data.length > 0) {
             res.data.data.map(item => {
               if (item.stationid === el.name) {
                 el.num = this.activeName === '1' ? item.hT : this.activeName === '2' ? item.dT : '-'
                 el.value[2] = {
-                  industrialOutputValue: '-',
+                  industrialOutputValue: this.gradeName[this.gradeSelect],
                   productList: [
                     { R: "-", highT: item.hT, downT: item.dT },
                   ],
@@ -520,18 +533,18 @@ export default {
         this.curBtn = res[0].dtime_ec
         this.resetSlider()
         this.resetCurTime()
-        this.fetchMap(res[0].dtime_ec, 1)
+        this.fetchMap(res[0].dtime_ec, 1, this.gradeSelect)
 
       })
     },
     timeClick(btn) {
       this.curBtn = btn;
-      this.fetchMap(this.curBtn, 1)
+      this.fetchMap(this.curBtn, 1, this.gradeSelect)
       this.resetSlider()
       this.resetCurTime()
     },
     handleClick() {
-      this.fetchMap(this.curBtn, this.curTime.pos)
+      this.fetchMap(this.curBtn, this.curTime.pos, this.gradeSelect)
     },
     mapClick(region) {
       this.$emit("mapClick", region);
@@ -811,8 +824,9 @@ export default {
 }
 .grade {
   background: url('../../assets/map/cndtzs_box_1.png') no-repeat;
-  width: 24.682609%;
-  height: 50%;
+  width: 456px;
+  height: 455px;
+
   padding: 20px;
   background-size: 100% 100%;
   position: absolute;

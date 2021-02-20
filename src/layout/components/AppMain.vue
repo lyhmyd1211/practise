@@ -27,7 +27,7 @@ export default {
   /* padding: 70px 0px 20px 0px; */
 }
 .fixed-header + .app-main {
-  padding-top: 50px;
+  padding-top: 45px;
 }
 </style>
 

@@ -43,6 +43,7 @@ export default {
             show: false
           },
           axisLine: {
+            show: false,
             lineStyle: {
               color: '#ffffff',
               opacity: 0.3
@@ -64,7 +65,7 @@ export default {
         yAxis: {
           type: 'category',
           data: [
-            'ave', 'best', 'double', 'polynomial', 'EC'
+            '滑动平均', '最佳系数', '双权重', '多项式拟合', 'EC'
           ],
           inverse: true,
           axisTick: {
@@ -163,9 +164,16 @@ export default {
   methods: {
     getInstance(instance) {
       this.instance = instance
-      console.log('in', instance);
+
+      instance.dispatchAction({
+        type: 'select',
+        seriesIndex: 0,
+        dataIndex: 0,
+      })
       instance.on('selectchanged', (params) => {
-        console.log('变化', params);
+        if (params.selected) {
+          this.$emit('selectedGrade', params.selected[0].dataIndex[0])
+        }
       })
     }
   }
@@ -174,7 +182,7 @@ export default {
 
 <style lang="scss" scoped>
 .com-box-title {
-  margin: 4px 30px;
+  margin: 6px 30px;
   font-size: 18px;
   color: #fff;
 }

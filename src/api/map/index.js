@@ -24,3 +24,10 @@ export function getMapByDate(params) {
     params
   })
 }
+export function getTableData(params) {
+  return request({
+    url: '/getTableData',
+    method: 'get',
+    params
+  })
+}

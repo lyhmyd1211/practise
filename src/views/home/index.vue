@@ -1,5 +1,18 @@
 <template>
   <div>
+    <el-tabs
+      v-model="tabTime"
+      type="card"
+      @tab-click="handleClick"
+      class="timeTab"
+    >
+      <el-tab-pane
+        :label="item.label"
+        :name="item.name"
+        v-for="(item, index) in tabList"
+        :key="index"
+      ></el-tab-pane>
+    </el-tabs>
     <div class="table1">
       <div v-for="(item, index) in todos" :key="index" class="table-main">
         <!-- :class="{'table-scale':islarge===index}" -->
@@ -17,7 +30,11 @@
               label="时间"
               width="63%"
               align="center"
-            ></el-table-column>
+            >
+              <template slot-scope="scope">
+                {{ scope.row.time | lookupFormatter(areaLookUp) }}
+              </template>
+            </el-table-column>
             <el-table-column
               :prop="time"
               :label="time"
@@ -73,12 +90,16 @@
       fullscreen
       :before-close="handleClose"
     >
-      <el-table border :data="largeData.tableData">
-        <el-table-column
-          prop="time"
-          label="时间"
-          align="center"
-        ></el-table-column>
+      <el-table
+        border
+        :data="largeData.tableData"
+        header-row-class-name="big-header"
+      >
+        <el-table-column prop="time" label="时间" align="center">
+          <template slot-scope="scope">
+            {{ scope.row.time | lookupFormatter(areaLookUp) }}
+          </template></el-table-column
+        >
         <el-table-column
           :prop="time"
           :label="time"
@@ -128,199 +149,113 @@
 </template>
 
 <script>
+import { getDate, getTableData } from '@/api/map'
 export default {
   data() {
     return {
       timeColumn: [
-        "05-20",
-        "05-08",
-        "04-20",
-        "04-08",
-        "03-20",
-        "03-08",
-        "02-20",
-        "02-08",
-        "01-20",
-        "01-08"
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
       ],
+      areaLookUp: [{
+        value: '瓮安',
+        key: '57728'
+      }, {
+        value: '福泉',
+        key: '57821'
+      }, {
+        value: '贵定',
+        key: '57824'
+      }, {
+        value: '龙里',
+        key: '57913'
+      }, {
+        value: '惠水',
+        key: '57912'
+      }, {
+        value: '长顺',
+        key: '57818'
+      }, {
+        value: '罗甸',
+        key: '57916'
+      }, {
+        value: '平塘',
+        key: '57921'
+      }, {
+        value: '独山',
+        key: '57922'
+      }, {
+        value: '荔波',
+        key: '57926'
+      }, {
+        value: '三都',
+        key: '57923'
+      }, {
+        value: '都匀',
+        key: '57827'
+      }],
+      timestrampColumn: [],
+      tabTime: '',
       todos: [
         {
-          title: "表1",
+          title: "滑动平均",
           tableData: [
-            {
-              time: "瓮安",
-              "05-20a": "9.0",
-              "05-08a": "23.3",
-              "05-20": "11.5",
-              "05-08": "20.3",
-              "04-20a": "10.0",
-              "04-20": "11.0"
-            },
-            {
-              time: "福泉"
-            },
-            {
-              time: "贵定"
-            },
-            {
-              time: "龙里"
-            },
-            {
-              time: "惠水"
-            },
-            {
-              time: "长顺"
-            },
-            {
-              time: "罗甸"
-            },
-            {
-              time: "平塘"
-            },
-            {
-              time: "独山"
-            },
-            {
-              time: "荔波"
-            },
-            {
-              time: "三都"
-            },
-            {
-              time: "都匀"
-            }
+
           ]
         },
         {
-          title: "表2",
+          title: "最佳系数",
           tableData: [
-            {
-              time: "瓮安"
-            },
-            {
-              time: "福泉"
-            },
-            {
-              time: "贵定"
-            },
-            {
-              time: "龙里"
-            },
-            {
-              time: "惠水"
-            },
-            {
-              time: "长顺"
-            },
-            {
-              time: "罗甸"
-            },
-            {
-              time: "平塘"
-            },
-            {
-              time: "独山"
-            },
-            {
-              time: "荔波"
-            },
-            {
-              time: "三都"
-            },
-            {
-              time: "都匀"
-            }
+
           ]
         },
         {
-          title: "表3",
+          title: "双权重",
           tableData: [
-            {
-              time: "瓮安"
-            },
-            {
-              time: "福泉"
-            },
-            {
-              time: "贵定"
-            },
-            {
-              time: "龙里"
-            },
-            {
-              time: "惠水"
-            },
-            {
-              time: "长顺"
-            },
-            {
-              time: "罗甸"
-            },
-            {
-              time: "平塘"
-            },
-            {
-              time: "独山"
-            },
-            {
-              time: "荔波"
-            },
-            {
-              time: "三都"
-            },
-            {
-              time: "都匀"
-            }
+
           ]
         },
         {
-          title: "表4",
+          title: "多项式拟合",
           tableData: [
-            {
-              time: "瓮安"
-            },
-            {
-              time: "福泉"
-            },
-            {
-              time: "贵定"
-            },
-            {
-              time: "龙里"
-            },
-            {
-              time: "惠水"
-            },
-            {
-              time: "长顺"
-            },
-            {
-              time: "罗甸"
-            },
-            {
-              time: "平塘"
-            },
-            {
-              time: "独山"
-            },
-            {
-              time: "荔波"
-            },
-            {
-              time: "三都"
-            },
-            {
-              time: "都匀"
-            }
+
           ]
         }
       ],
-
+      tabList: [],
       islarge: false,
       largeData: {}
     };
   },
   methods: {
+    handleClick() {
+
+    },
+    fetchData() {
+      getDate({ count: 10 }).then(res => {
+        this.timeColumn = []
+        for (let index = 0; index < 12; index++) {
+          this.tabList[index] = { label: this.$moment(res[0].dtime_ec + 1000 * 12 * 60 * 60 * (index + 2)).format('DD日HH时'), name: res[0].dtime_ec + 1000 * 12 * 60 * 60 * (index + 2) + '' }
+        }
+        this.tabTime = this.tabList[0].name
+        res.map(item => {
+          this.timestrampColumn.push(item.dtime_ec)
+          this.timeColumn.push(this.$moment(item.dtime_ec).format('DD-HH'))
+        })
+        getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 0 }).then(res => {
+          this.todos[0].tableData = res
+        })
+      })
+
+    },
     scale: function (e, item) {
       this.largeData = item;
       this.islarge = true
@@ -331,13 +266,33 @@ export default {
   },
   created() {
     this.todos.map((item, index) => { });
+    this.fetchData()
   }
 };
 </script>
-
+<style lang="scss" scoped>
+.timeTab {
+  margin-top: 15px;
+}
+</style>
 <style lang="scss">
+.big-header {
+  th {
+    background: #f5f7fa;
+  }
+}
+.timeTab {
+  .el-tabs__header {
+    margin: 0;
+  }
+  .el-tabs__item {
+    height: 30px;
+    line-height: 30px;
+  }
+}
 .table1 {
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   padding-top: 20px;
 }
@@ -348,6 +303,9 @@ export default {
   .el-table--mini td,
   .el-table--mini th {
     padding: 2px 0;
+  }
+  .el-table .cell {
+    line-height: 21px;
   }
 }
 .high {
