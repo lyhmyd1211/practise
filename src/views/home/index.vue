@@ -1,5 +1,11 @@
 <template>
-  <div>
+  <div class="home-main">
+    <el-tabs v-model="activeName" @tab-click="typeClick" class="typeTab">
+      <el-tab-pane label="最高气温" name="1"></el-tab-pane>
+      <el-tab-pane label="最低气温" name="2"></el-tab-pane>
+      <!-- <el-tab-pane label="降水量" name="3"></el-tab-pane> -->
+    </el-tabs>
+
     <el-tabs
       v-model="tabTime"
       type="card"
@@ -13,32 +19,28 @@
         :key="index"
       ></el-tab-pane>
     </el-tabs>
-    <div class="table1">
-      <div v-for="(item, index) in todos" :key="index" class="table-main">
+    <div class="table1" v-loading="loading">
+      <template v-for="(item, index) in todos">
         <!-- :class="{'table-scale':islarge===index}" -->
         <el-table
+          :key="index"
           border
+          style="width: 100%"
           :data="item.tableData"
-          style="flex: 1; flex-wrap: wrap"
           size="mini"
-          :fit="false"
+          :fit="true"
           @row-dblclick="scale($event, item)"
         >
           <el-table-column :label="item.title" align="center">
-            <el-table-column
-              prop="time"
-              label="时间"
-              width="63%"
-              align="center"
-            >
+            <el-table-column prop="time" label="时间" align="center">
               <template slot-scope="scope">
                 {{ scope.row.time | lookupFormatter(areaLookUp) }}
               </template>
             </el-table-column>
             <el-table-column
               :prop="time"
+              width="55px"
               :label="time"
-              width="63%"
               v-for="(time, tindex) in timeColumn"
               :key="tindex"
               align="center"
@@ -51,7 +53,7 @@
                     2
                   "
                   class="high"
-                  >{{ scope.row[time] }}</span
+                  >{{ scope.row[time] || '-' }}</span
                 >
                 <span
                   v-else-if="
@@ -60,19 +62,19 @@
                     -2
                   "
                   class="low"
-                  >{{ scope.row[time] }}</span
+                  >{{ scope.row[time] || '-' }}</span
                 >
-                <span v-else>{{ scope.row[time] }}</span>
+                <span v-else>{{ scope.row[time] || '-' }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="area" width="63%" align="center">
+            <el-table-column prop="area" align="center">
               <template slot="header">
                 <span>误差</span>
                 <br />
                 <span>范围</span>
               </template>
             </el-table-column>
-            <el-table-column prop="midium" width="63%" align="center">
+            <el-table-column prop="midium" align="center">
               <template slot="header">
                 <span>误差</span>
                 <br />
@@ -81,7 +83,7 @@
             </el-table-column>
           </el-table-column>
         </el-table>
-      </div>
+      </template>
     </div>
     <el-dialog
       :title="largeData.title"
@@ -115,7 +117,7 @@
                 2
               "
               class="high"
-              >{{ scope.row[time] }}</span
+              >{{ scope.row[time] || '-' }}</span
             >
             <span
               v-else-if="
@@ -124,9 +126,9 @@
                 -2
               "
               class="low"
-              >{{ scope.row[time] }}</span
+              >{{ scope.row[time] || '-' }}</span
             >
-            <span v-else>{{ scope.row[time] }}</span>
+            <span v-else>{{ scope.row[time] || '-' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="area" align="center">
@@ -153,6 +155,8 @@ import { getDate, getTableData } from '@/api/map'
 export default {
   data() {
     return {
+      loading: false,
+      activeName: '1',
       timeColumn: [
         '-',
         '-',
@@ -236,8 +240,30 @@ export default {
     };
   },
   methods: {
+    typeClick() {
+      this.fetchTable()
+    },
     handleClick() {
-
+      this.fetchTable()
+    },
+    fetchTable() {
+      this.loading = true
+      getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 0, type: this.activeName }).then(res => {
+        this.todos[0].tableData = res
+        this.loading = false
+      })
+      getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 1, type: this.activeName }).then(res => {
+        this.todos[1].tableData = res
+        this.loading = false
+      })
+      getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 2, type: this.activeName }).then(res => {
+        this.todos[2].tableData = res
+        this.loading = false
+      })
+      getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 4, type: this.activeName }).then(res => {
+        this.todos[3].tableData = res
+        this.loading = false
+      })
     },
     fetchData() {
       getDate({ count: 10 }).then(res => {
@@ -250,9 +276,7 @@ export default {
           this.timestrampColumn.push(item.dtime_ec)
           this.timeColumn.push(this.$moment(item.dtime_ec).format('DD-HH'))
         })
-        getTableData({ area: JSON.stringify(this.timestrampColumn), date: this.tabTime, way: 0 }).then(res => {
-          this.todos[0].tableData = res
-        })
+        this.fetchTable()
       })
 
     },
@@ -271,14 +295,41 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+.home-main {
+  margin-top: 5px;
+}
 .timeTab {
-  margin-top: 15px;
+  // margin-top: 15px;
 }
 </style>
 <style lang="scss">
 .big-header {
   th {
     background: #f5f7fa;
+  }
+}
+.typeTab {
+  background-color: #f9f9f9;
+  padding: 0 18px;
+  .el-tabs__header {
+    margin: 0;
+  }
+  .el-tabs__item {
+    font-weight: 700;
+    color: #304156;
+  }
+  .el-tabs__item:hover {
+    color: #42b983;
+    cursor: pointer;
+  }
+  .el-tabs__item.is-active {
+    color: #42b983;
+  }
+  .el-tabs__active-bar {
+    display: none;
+  }
+  .el-tabs__nav-wrap::after {
+    display: none;
   }
 }
 .timeTab {
@@ -291,15 +342,14 @@ export default {
   }
 }
 .table1 {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding-top: 20px;
-}
-.table-main {
-  width: calc((100vw - 280px) / 2);
-  margin-bottom: 20px;
-  margin-right: 10px;
+  // display: flex;
+  // justify-content: center;
+  // flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 10px;
+  row-gap: 10px;
+  padding: 10px 20px;
   .el-table--mini td,
   .el-table--mini th {
     padding: 2px 0;
@@ -307,6 +357,11 @@ export default {
   .el-table .cell {
     line-height: 21px;
   }
+}
+.table-main {
+  width: calc((100vw - 280px) / 2);
+  margin-bottom: 15px;
+  margin-right: 10px;
 }
 .high {
   color: #f56c6c;

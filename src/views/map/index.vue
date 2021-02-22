@@ -26,7 +26,7 @@
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="最高气温" name="1"></el-tab-pane>
       <el-tab-pane label="最低气温" name="2"></el-tab-pane>
-      <el-tab-pane label="降水量" name="3"></el-tab-pane>
+      <!-- <el-tab-pane label="降水量" name="3"></el-tab-pane> -->
     </el-tabs>
     <div class="map-content">
       <div
@@ -47,6 +47,22 @@
             <a @click="mapClick(item)">{{ item.name }}</a>
           </el-breadcrumb-item>
         </el-breadcrumb>
+      </div>
+      <div class="describle">
+        <div>
+          <span>预报方法：</span>
+          <span>{{ gradeName[gradeSelect] }}</span>
+        </div>
+        <div>
+          <span>起报时间：</span>
+          <span>{{ curBtn | timeFormatter('DD日HH时') }}</span>
+        </div>
+        <div>
+          <span>预报时间：</span>
+          <span>{{
+            marks[toFix(slider, 2)] ? marks[toFix(slider, 2)].label : ''
+          }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -83,6 +99,7 @@ export default {
 
   data() {
     return {
+      toFix,
       timer: '',
       slider: 0,
       curTime: {},
@@ -744,7 +761,7 @@ export default {
 <style lang="scss" scoped>
 .map-main {
   width: 100%;
-  height: calc(100vh - 50px);
+  height: calc(100vh - 45px);
   position: relative;
 }
 .map-content {
@@ -832,6 +849,13 @@ export default {
   position: absolute;
   top: 15%;
   z-index: 1;
+}
+.describle {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  line-height: 25px;
+  color: #fff;
 }
 </style>
 <style lang="scss">
